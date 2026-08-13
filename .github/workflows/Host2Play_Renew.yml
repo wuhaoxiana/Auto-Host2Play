@@ -35,11 +35,13 @@ jobs:
           fi
 
       - name: 配置 Python 环境
+        if: steps.check.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: 安装系统依赖
+        if: steps.check.outputs.should_run == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb ffmpeg unzip curl
@@ -47,17 +49,20 @@ jobs:
           sudo dpkg -i /tmp/chrome.deb || sudo apt-get install -f -y
 
       - name: 安装 Python 依赖
+        if: steps.check.outputs.should_run == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install DrissionPage xvfbwrapper requests SpeechRecognition pydub
 
       - name: 启用 WARP 网络
+        if: steps.check.outputs.should_run == 'true'
         uses: fscarmen/warp-on-actions@v1.3
         with:
           stack: dual
           mode: client
 
       - name: 修复 DNS
+        if: steps.check.outputs.should_run == 'true'
         run: |
           sudo systemctl stop systemd-resolved 2>/dev/null || true
           sudo systemctl disable systemd-resolved 2>/dev/null || true
@@ -69,19 +74,20 @@ jobs:
           curl -s --max-time 10 https://www.cloudflare.com/cdn-cgi/trace | grep -E 'ip=|warp=|loc=' || true
 
       - name: 执行续订
+        if: steps.check.outputs.should_run == 'true'
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python main.py
 
-      - name: 上传截图
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots-${{ github.run_number }}
-          path: output/screenshots/*.png
-          retention-days: 7
-          if-no-files-found: ignore
+#      - name: 上传截图
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: screenshots-${{ github.run_number }}
+#          path: output/screenshots/*.png
+#          retention-days: 7
+#          if-no-files-found: ignore
 
       # 清理旧的工作流运行记录（无论是否满足周期都执行，避免堆积）
       - name: 🧹 清理旧的工作流运行记录
