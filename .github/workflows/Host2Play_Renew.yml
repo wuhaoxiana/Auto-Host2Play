@@ -2,7 +2,7 @@ name: Host2Play 续期
 
 on:
   schedule:
-    - cron: '55 1 */2 * *'
+    - cron: '55 1 * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,22 @@ jobs:
     steps:
       - name: 拉取仓库
         uses: actions/checkout@v4
+
+      # 日期检查（决定今天是否该执行）
+      - name: Check interval
+        id: check
+        run: |
+          START="2026-08-12"
+          TODAY=$(date -u +%F)
+          start_sec=$(date -d "$START" +%s)
+          today_sec=$(date -d "$TODAY" +%s)
+          days=$(( (today_sec - start_sec) / 86400 ))
+          echo "Days since $START: $days"
+          if (( days % 2 == 0 )); then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 配置 Python 环境
         uses: actions/setup-python@v5
